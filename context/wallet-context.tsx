@@ -23,12 +23,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Función para comprobar si ya hay una wallet conectada al cargar la página
   useEffect(() => {
     const checkConnection = async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
+      const eth = (window as any).ethereum
+      if (typeof window !== "undefined" && eth) {
         try {
-          const provider = new ethers.BrowserProvider(window.ethereum)
+          const provider = new ethers.BrowserProvider(eth)
           const accounts = await provider.listAccounts()
 
           if (accounts.length > 0) {
@@ -45,7 +45,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     checkConnection()
 
-    if (typeof window !== "undefined" && window.ethereum) {
+    const eth = (window as any).ethereum
+    if (typeof window !== "undefined" && eth) {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
           setAddress(null)
@@ -67,28 +68,26 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setIsConnected(false)
       }
 
-      window.ethereum.on("accountsChanged", handleAccountsChanged)
-      window.ethereum.on("chainChanged", handleChainChanged)
-      window.ethereum.on("disconnect", handleDisconnect)
+      eth.on("accountsChanged", handleAccountsChanged)
+      eth.on("chainChanged", handleChainChanged)
+      eth.on("disconnect", handleDisconnect)
 
       return () => {
-        window.ethereum.removeListener("accountsChanged", handleAccountsChanged)
-        window.ethereum.removeListener("chainChanged", handleChainChanged)
-        window.ethereum.removeListener("disconnect", handleDisconnect)
+        eth.removeListener("accountsChanged", handleAccountsChanged)
+        eth.removeListener("chainChanged", handleChainChanged)
+        eth.removeListener("disconnect", handleDisconnect)
       }
     }
   }, [])
 
-  // Función para conectar wallet
   const connectWallet = async () => {
     setIsConnecting(true)
     setError(null)
 
     try {
-      if (typeof window !== "undefined" && window.ethereum) {
-        const provider = new ethers.BrowserProvider(window.ethereum)
-
-        // Solicitar conexión de cuenta
+      const eth = (window as any).ethereum
+      if (typeof window !== "undefined" && eth) {
+        const provider = new ethers.BrowserProvider(eth)
         const accounts = await provider.send("eth_requestAccounts", [])
 
         if (accounts.length > 0) {
@@ -110,14 +109,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Función para desconectar wallet
   const disconnectWallet = () => {
     setAddress(null)
     setChainId(null)
     setIsConnected(false)
   }
 
-  // Crear una versión corta de la dirección para mostrar en la UI
   const shortAddress = address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : null
 
   const value = {

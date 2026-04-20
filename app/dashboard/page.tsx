@@ -1,284 +1,258 @@
 "use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Star, StarHalf, ArrowLeft, Award, History, User } from "lucide-react"
+import { Star, ArrowLeft, ShieldCheck, History, Award, Zap, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { useWallet } from "@/context/wallet-context"
 import { ConnectWalletButton } from "@/components/connect-wallet-button"
 
 export default function DashboardPage() {
   const { isConnected, shortAddress, address } = useWallet()
+  const [activeTab, setActiveTab] = useState("reviews")
 
-  // Datos de ejemplo para el usuario
+  // Mock data enhance
   const user = {
-    reputation: 78,
-    reviewCount: 12,
-    joinedDate: "Enero 2023",
-    level: "Verificador Confiable",
+    reputation: 84,
+    reviewCount: 24,
+    joinedDate: "Marzo 2024",
+    level: "Auditor Platino",
+    impactScore: "1.2k",
   }
 
-  // Datos de ejemplo para las reseñas del usuario
   const userReviews = [
     {
       id: 1,
-      businessName: "Café Blockchain",
-      businessId: 1,
+      businessName: "Lumina Café",
+      businessId: "biz_1",
       rating: 5,
-      text: "Excelente servicio y ambiente. El café es de primera calidad y el personal muy amable. Definitivamente volveré.",
-      date: "15 Abril, 2023",
-      verified: true,
+      text: "La calidad del grano es excepcional. Se nota que cada taza es auditada por expertos. El ambiente minimalista ayuda a concentrarse.",
+      date: "Ayer",
+      txHash: "0x89e2...f4a1",
+      platform: 'maps'
     },
     {
       id: 2,
-      businessName: "Tech Solutions",
-      businessId: 2,
+      businessName: "Zenith Estancias",
+      businessId: "biz_2",
       rating: 4,
-      text: "Buen servicio técnico, resolvieron mi problema rápidamente. Precios un poco elevados.",
-      date: "22 Marzo, 2023",
-      verified: true,
+      text: "Vistas increíbles y check-in automatizado perfecto. Solo mejoraría la velocidad del Wi-Fi en las plantas superiores.",
+      date: "Hace 1 semana",
+      txHash: "0x45c1...e2b9",
+      platform: 'airbnb'
     },
     {
       id: 3,
-      businessName: "Crypto Market",
-      businessId: 3,
+      businessName: "Aura Boutique",
+      businessId: "biz_3",
       rating: 5,
-      text: "Productos frescos y de calidad. El personal es muy amable y conocedor.",
-      date: "10 Febrero, 2023",
-      verified: true,
-    },
+      text: "La mejor selección de moda sostenible que he visto. Transparencia total en el origen de los materiales.",
+      date: "Hace 1 mes",
+      txHash: "0x12a9...d8c3",
+      platform: 'tripadvisor'
+    }
   ]
 
   if (!isConnected) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4">Conecta tu wallet para ver tu dashboard</h1>
-        <p className="text-muted-foreground mb-8">Necesitas conectar tu wallet para acceder a tu perfil y reseñas.</p>
-        <ConnectWalletButton />
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8">
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="w-24 h-24 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto border border-purple-500/20">
+            <ShieldCheck className="w-12 h-12 text-purple-500" />
+          </div>
+          <h1 className="text-4xl font-medium tracking-tighter text-white">Tu Reputación te espera</h1>
+          <p className="text-gray-500 font-light">Conecta tu wallet para acceder a tu historial de auditorías y gestionar tu identidad descentralizada.</p>
+          <ConnectWalletButton />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Link href="/" className="inline-flex items-center text-sm mb-6 hover:underline">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver a la página principal
-      </Link>
+    <main className="min-h-screen bg-black pt-32 pb-20">
+      <div className="w-full px-8 md:px-16 lg:px-24">
+        <div className="max-w-[1800px] mx-auto">
+          
+          <Link href="/" className="inline-flex items-center text-sm text-gray-500 mb-12 hover:text-purple-400 transition-colors uppercase tracking-widest font-bold">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver
+          </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Perfil de Usuario</CardTitle>
-              <CardDescription>Información de tu wallet y reputación</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                  <User className="w-10 h-10 text-slate-500" />
-                </div>
-                <div className="font-medium">{shortAddress}</div>
-                <div className="text-sm text-muted-foreground">Miembro desde {user.joinedDate}</div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <div className="font-medium">Reputación</div>
-                  <div>{user.reputation}/100</div>
-                </div>
-                <Progress value={user.reputation} className="h-2" />
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
-                <Award className="w-8 h-8 mx-auto mb-2 text-primary" />
-                <div className="font-medium">{user.level}</div>
-                <div className="text-sm text-muted-foreground">Nivel de confianza</div>
-              </div>
-
-              <div className="text-sm">
-                <div className="flex justify-between py-2">
-                  <div>Total de reseñas</div>
-                  <div className="font-medium">{user.reviewCount}</div>
-                </div>
-                <div className="flex justify-between py-2">
-                  <div>Reseñas verificadas</div>
-                  <div className="font-medium">{user.reviewCount}</div>
-                </div>
-                <div className="flex justify-between py-2">
-                  <div>Calificación promedio</div>
-                  <div className="font-medium">4.7/5</div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigator.clipboard.writeText(address || "")}>
-                Copiar dirección completa
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="reviews">
-            <TabsList className="mb-6">
-              <TabsTrigger value="reviews">Mis Reseñas</TabsTrigger>
-              <TabsTrigger value="activity">Actividad</TabsTrigger>
-              <TabsTrigger value="reputation">Reputación</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="reviews">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle>Historial de Reseñas</CardTitle>
-                    <History className="w-5 h-5 text-muted-foreground" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+            
+            {/* Sidebar: Reputation Passport */}
+            <div className="lg:col-span-4 space-y-8">
+              <div className="bg-white/[0.02] border border-white/10 rounded-[3rem] p-10 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 blur-3xl -mr-16 -mt-16" />
+                
+                <div className="flex flex-col items-center text-center space-y-6">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 p-0.5">
+                      <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                        <img 
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${address}`} 
+                            alt="Avatar" 
+                            className="w-16 h-16 opacity-80"
+                        />
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-purple-500 text-black px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
+                      PRO
+                    </div>
                   </div>
-                  <CardDescription>Has escrito {user.reviewCount} reseñas verificadas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {userReviews.map((review) => (
-                      <div key={review.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <Link href={`/business/${review.businessId}`} className="font-medium hover:underline">
-                            {review.businessName}
-                          </Link>
-                          <div className="text-sm text-muted-foreground">{review.date}</div>
+                  
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-medium tracking-tighter text-white">{shortAddress}</h2>
+                    <p className="text-purple-400 text-xs uppercase tracking-widest font-bold">{user.level}</p>
+                  </div>
+
+                  <div className="w-full pt-6 space-y-6">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-xs uppercase tracking-widest text-gray-500">
+                        <span>Reputación On-Chain</span>
+                        <span className="text-white">{user.reputation}/100</span>
+                      </div>
+                      <Progress value={user.reputation} className="h-1.5 bg-white/5" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+                        <p className="text-[10px] uppercase text-gray-600 mb-1 tracking-widest">Reseñas</p>
+                        <p className="text-xl font-medium text-white">{user.reviewCount}</p>
+                      </div>
+                      <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/5">
+                        <p className="text-[10px] uppercase text-gray-600 mb-1 tracking-widest">Impacto</p>
+                        <p className="text-xl font-medium text-white">{user.impactScore}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button variant="outline" className="w-full border-white/10 rounded-2xl h-12 text-gray-400 hover:text-white" onClick={() => navigator.clipboard.writeText(address || "")}>
+                    Copiar dirección
+                  </Button>
+                </div>
+              </div>
+
+              {/* Badges card */}
+              <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 space-y-6">
+                <h3 className="text-sm uppercase tracking-widest text-gray-500 font-bold">Logros Obtenidos</h3>
+                <div className="flex flex-wrap gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20" title="Pionero">
+                    <Zap className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20" title="Verificador">
+                    <ShieldCheck className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 grayscale opacity-30" title="Más de 100 reseñas">
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content: Reviews List */}
+            <div className="lg:col-span-8">
+              <div className="flex gap-12 border-b border-white/5 mb-12 no-scrollbar overflow-x-auto">
+                <button 
+                  onClick={() => setActiveTab("reviews")}
+                  className={`pb-6 text-sm font-medium tracking-widest uppercase transition-all relative ${activeTab === "reviews" ? "text-purple-400" : "text-gray-600 hover:text-white"}`}
+                >
+                  Mis Auditorías
+                  {activeTab === "reviews" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+                </button>
+                <button 
+                  onClick={() => setActiveTab("activity")}
+                  className={`pb-6 text-sm font-medium tracking-widest uppercase transition-all relative ${activeTab === "activity" ? "text-purple-400" : "text-gray-600 hover:text-white"}`}
+                >
+                  Actividad
+                  {activeTab === "activity" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+                </button>
+              </div>
+
+              {activeTab === "reviews" && (
+                <div className="space-y-8">
+                  {userReviews.map((review) => (
+                    <div key={review.id} className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-8 flex flex-col md:flex-row gap-8 transition-all hover:bg-white/[0.04]">
+                      <div className="md:w-48 h-32 bg-white/5 rounded-2xl overflow-hidden flex-shrink-0">
+                         <img 
+                            src={
+                                review.businessId === 'biz_1' ? "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=200" :
+                                review.businessId === 'biz_2' ? "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=200" :
+                                "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=200"
+                            } 
+                            alt={review.businessName}
+                            className="w-full h-full object-cover opacity-60"
+                         />
+                      </div>
+                      
+                      <div className="flex-1 flex flex-col">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <Link href={`/business/${review.businessId}`} className="text-2xl font-medium text-white hover:text-purple-400 transition-colors tracking-tighter">
+                              {review.businessName}
+                            </Link>
+                            <p className="text-[10px] text-gray-600 mt-1 uppercase tracking-widest">{review.date}</p>
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-purple-500 text-purple-500" : "text-gray-800"}`} />
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex items-center mb-2">
-                          <RatingStars rating={review.rating} />
-                        </div>
-                        <p className="text-sm">{review.text}</p>
-                        <div className="mt-3 flex justify-between items-center">
-                          <div className="text-xs text-muted-foreground">TX: 0x1a2b...3c4d</div>
-                          <Button variant="ghost" size="sm">
-                            Editar
+                        
+                        <p className="text-gray-400 text-sm font-light leading-relaxed mb-6">
+                          "{review.text}"
+                        </p>
+                        
+                        <div className="mt-auto flex justify-between items-center pt-6 border-t border-white/5">
+                          <div className="flex items-center gap-4">
+                             <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <span className="text-[10px] text-gray-500 uppercase font-bold font-mono">TX: {review.txHash}</span>
+                             </div>
+                             <a href="#" className="text-gray-700 hover:text-purple-400 transition-colors">
+                                <ExternalLink className="w-3.5 h-3.5" />
+                             </a>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-white uppercase text-[10px] font-bold tracking-widest">
+                            Editar Auditoría
                           </Button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            <TabsContent value="activity">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Actividad Reciente</CardTitle>
-                  <CardDescription>Historial de acciones en la plataforma</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                      <div>
-                        <div className="font-medium">Escribiste una reseña para Café Blockchain</div>
-                        <div className="text-sm text-muted-foreground">15 Abril, 2023 - 14:32</div>
+              {activeTab === "activity" && (
+                <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-10">
+                   <div className="space-y-12">
+                      <div className="flex gap-6 relative">
+                        <div className="absolute left-[7px] top-8 bottom-0 w-px bg-white/5" />
+                        <div className="w-4 h-4 rounded-full bg-purple-500 mt-1 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                        <div className="space-y-1">
+                          <p className="text-white font-medium">Auditoría completada exitosamente</p>
+                          <p className="text-sm text-gray-500">Publicaste una reseña verificada para Lumina Café</p>
+                          <p className="text-xs text-gray-700 uppercase tracking-widest pt-2">Hoy - 14:32</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                      <div>
-                        <div className="font-medium">Escribiste una reseña para Tech Solutions</div>
-                        <div className="text-sm text-muted-foreground">22 Marzo, 2023 - 10:15</div>
+                      <div className="flex gap-6 relative">
+                        <div className="absolute left-[7px] top-8 bottom-0 w-px bg-white/5" />
+                        <div className="w-4 h-4 rounded-full bg-white/10 mt-1" />
+                        <div className="space-y-1">
+                          <p className="text-gray-400 font-medium">Actualización de pasaporte</p>
+                          <p className="text-sm text-gray-500">Alcanzaste el nivel de Auditor Platino</p>
+                          <p className="text-xs text-gray-700 uppercase tracking-widest pt-2">Ayer - 09:12</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                      <div>
-                        <div className="font-medium">Conectaste tu wallet por primera vez</div>
-                        <div className="text-sm text-muted-foreground">15 Enero, 2023 - 09:45</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="reputation">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sistema de Reputación</CardTitle>
-                  <CardDescription>Cómo se calcula tu nivel de confianza</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="font-medium mb-2">Tu puntuación actual: {user.reputation}/100</h3>
-                      <Progress value={user.reputation} className="h-2 mb-4" />
-                      <p className="text-sm text-muted-foreground">
-                        Tu reputación se basa en tu actividad en la plataforma, la calidad de tus reseñas y la
-                        verificación de tu wallet.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Factores positivos</h4>
-                        <ul className="text-sm space-y-2">
-                          <li className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            Reseñas verificadas en blockchain
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            Consistencia en calificaciones
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            Antigüedad de la wallet
-                          </li>
-                        </ul>
-                      </div>
-
-                      <div className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-2">Factores negativos</h4>
-                        <ul className="text-sm space-y-2">
-                          <li className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                            Reseñas reportadas
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                            Calificaciones extremas sin justificación
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                            Inactividad prolongada
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                   </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function RatingStars({ rating }: { rating: number }) {
-  const fullStars = Math.floor(rating)
-  const hasHalfStar = rating % 1 >= 0.5
-
-  return (
-    <div className="flex">
-      {[...Array(fullStars)].map((_, i) => (
-        <Star key={`star-${i}`} className="w-4 h-4 fill-primary text-primary" />
-      ))}
-      {hasHalfStar && <StarHalf className="w-4 h-4 fill-primary text-primary" />}
-      {[...Array(5 - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
-        <Star key={`empty-star-${i}`} className="w-4 h-4 text-muted-foreground" />
-      ))}
-    </div>
+    </main>
   )
 }

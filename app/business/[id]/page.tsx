@@ -1,486 +1,354 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Star, StarHalf, MapPin, Calendar, ArrowLeft, Shield, Info } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Star, MapPin, Calendar, ArrowLeft, ShieldCheck, Info, ExternalLink, Globe, Phone, MessageSquare } from "lucide-react"
 import Link from "next/link"
+import { useWallet } from "@/context/wallet-context"
 import { ConnectWalletButton } from "@/components/connect-wallet-button"
 import { ReviewForm } from "@/components/review-form"
-import { useWallet } from "@/context/wallet-context"
 import { useToast } from "@/components/ui/use-toast"
 import { VerificationBadge } from "@/components/verification-badge"
-import { VerificationDetails } from "@/components/verification-details"
-import { EigenVerificationBadge } from "@/components/eigen-verification-badge"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
-import type { ReviewVerification, VerificationResult } from "@/services/verification-service"
+import { VerificationDetails } from "@/components/verification-details"
+import { EigenVerificationBadge } from "@/components/eigen-verification-badge"
 
-export default function BusinessPage({ params }: { params: { id: string } }) {
+export default function BusinessPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const id = resolvedParams.id
+  
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [hasReviewed, setHasReviewed] = useState(false)
-  const [userReview, setUserReview] = useState<ReviewVerification | null>(null)
-  const [selectedReview, setSelectedReview] = useState<{
-    review: any
-    verification: VerificationResult
-  } | null>(null)
+  const [userReview, setUserReview] = useState<any | null>(null)
+  const [selectedReview, setSelectedReview] = useState<any | null>(null)
   const { isConnected, address, chainId } = useWallet()
   const { toast } = useToast()
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false)
 
-  // Datos de ejemplo para el negocio
+  // Mock business data based on the ID or default
   const business = {
-    id: Number.parseInt(params.id),
-    name: "Café Blockchain",
-    description:
-      "Cafetería especializada con ambiente acogedor y productos de alta calidad. Ofrecemos una variedad de cafés de especialidad, tés orgánicos y pasteles artesanales.",
-    location: "Calle Innovación 123, Ciudad Crypto",
-    category: "Restaurantes",
-    rating: 4.5,
-    reviewCount: 28,
-    openHours: "Lun-Vie: 8:00 - 20:00, Sáb-Dom: 9:00 - 21:00",
-    website: "https://cafeblockchain.com",
-    phone: "+1 234 567 890",
-    contractAddress: "0x1a2b3c4d5e6f7g8h9i0j",
+    id: id,
+    name: id === 'biz_1' ? "Lumina Café" : id === 'biz_2' ? "Zenith Estancias" : "Aura Boutique",
+    description: "Un espacio diseñado para la excelencia y la sostenibilidad en el corazón de la ciudad. Auditado trimestralmente para garantizar la máxima calidad en cada servicio.",
+    location: "Av. Blockchain 102, Distrito Digital",
+    category: id === 'biz_1' ? "Restaurantes" : id === 'biz_2' ? "Viajes" : "Compras",
+    rating: 4.8,
+    reviewCount: 156,
+    openHours: "Lun-Dom: 09:00 - 22:00",
+    website: "https://aletheum.x/lumina",
+    phone: "+1 888 234 567",
+    contractAddress: "0x74a2...b9c1",
+    coverImage: params.id === 'biz_1' ? "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1800" :
+                 params.id === 'biz_2' ? "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=1800" :
+                 "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1800",
   }
 
-  // Datos de ejemplo para las reseñas con verificación
   const reviews = [
     {
       id: 1,
-      walletAddress: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
+      walletAddress: "0x1a2b...3c4d",
       rating: 5,
-      text: "Excelente servicio y ambiente. El café es de primera calidad y el personal muy amable. Definitivamente volveré.",
-      date: "2023-04-15",
+      text: "Experiencia increíble. La transparencia en los precios y el origen de los insumos es lo que hace que vuelva cada semana.",
+      date: "Hace 2 días",
       verification: {
         status: "verified" as const,
-        message: "Verificado en blockchain. La reseña es auténtica.",
-        timestamp: Date.now() - 3600000 * 24 * 30,
-        transactionHash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
-        blockNumber: 12345678,
+        transactionHash: "0x89e2...f4a1",
         eigenLayerVerified: true,
-        eigenConfidenceScore: 0.92,
-        eigenValidatorCount: 5,
-        eigenQuorumReached: true,
-        walletInfo: {
-          firstTransactionDate: new Date(Date.now() - 3600000 * 24 * 365), // 1 año atrás
-          ageInDays: 365,
-          isOldEnough: true,
-          transactionCount: 48,
-        },
-        walletVerification: {
-          isValid: true,
-          confidenceScore: 0.95,
-          message: "Wallet verificada con 365 días de antigüedad.",
-        },
+        eigenConfidenceScore: 0.98,
       },
     },
     {
       id: 2,
-      walletAddress: "0x5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x",
+      walletAddress: "0x5e6f...7g8h",
       rating: 4,
-      text: "Muy buen lugar para trabajar o estudiar. Buena conexión WiFi y enchufes disponibles. El café podría ser un poco más fuerte.",
-      date: "2023-03-22",
+      text: "Muy buen servicio, el personal está altamente capacitado. Solo noté un ligero retraso en la hora pico, pero nada grave.",
+      date: "Hace 1 semana",
       verification: {
         status: "verified" as const,
-        message: "Verificado en blockchain. La reseña es auténtica.",
-        timestamp: Date.now() - 3600000 * 24 * 45,
-        transactionHash: "0x5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x",
-        blockNumber: 12340123,
+        transactionHash: "0x45c1...e2b9",
         eigenLayerVerified: true,
-        eigenConfidenceScore: 0.78,
-        eigenValidatorCount: 4,
-        eigenQuorumReached: true,
-        walletInfo: {
-          firstTransactionDate: new Date(Date.now() - 3600000 * 24 * 180), // 6 meses atrás
-          ageInDays: 180,
-          isOldEnough: true,
-          transactionCount: 25,
-        },
-        walletVerification: {
-          isValid: true,
-          confidenceScore: 0.82,
-          message: "Wallet verificada con 180 días de antigüedad.",
-        },
+        eigenConfidenceScore: 0.85,
       },
-    },
-    {
-      id: 3,
-      walletAddress: "0x9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c",
-      rating: 5,
-      text: "Los pasteles son increíbles, especialmente el de zanahoria. Precios razonables para la calidad que ofrecen.",
-      date: "2023-02-10",
-      verification: {
-        status: "pending" as const,
-        message: "Verificación en proceso. Esperando confirmaciones en la blockchain.",
-        timestamp: Date.now() - 3600000 * 2,
-        eigenLayerVerified: false,
-        eigenConfidenceScore: 0.5,
-        eigenValidatorCount: 2,
-        eigenQuorumReached: false,
-        walletInfo: {
-          firstTransactionDate: new Date(Date.now() - 3600000 * 24 * 20), // 20 días atrás
-          ageInDays: 20,
-          isOldEnough: false,
-          transactionCount: 5,
-        },
-        walletVerification: {
-          isValid: true,
-          confidenceScore: 0.4,
-          message: "Wallet verificada, pero es relativamente nueva.",
-        },
-      },
-    },
-    {
-      id: 4,
-      walletAddress: "0xd1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w",
-      rating: 2,
-      text: "Servicio lento y precios altos.",
-      date: "2023-01-05",
-      verification: {
-        status: "rejected" as const,
-        message: "La reseña no cumple con los requisitos mínimos de contenido.",
-        timestamp: Date.now() - 3600000 * 24 * 60,
-        walletInfo: {
-          firstTransactionDate: new Date(Date.now() - 3600000 * 24 * 10), // 10 días atrás
-          ageInDays: 10,
-          isOldEnough: false,
-          transactionCount: 2,
-        },
-        walletVerification: {
-          isValid: false,
-          confidenceScore: 0.2,
-          message: "La información de la wallet no coincide con nuestros registros en el AVS.",
-        },
-      },
-    },
+    }
   ]
 
-  // Comprobar si el usuario ya ha escrito una reseña para este negocio
-  useEffect(() => {
-    if (isConnected && address) {
-      // Aquí normalmente consultaríamos a la blockchain para ver si el usuario ya ha escrito una reseña
-      // Por ahora, simulamos que no ha escrito una reseña
-      setHasReviewed(false)
-      setUserReview(null)
-    }
-  }, [isConnected, address])
-
-  const handleSubmitReview = (reviewData: ReviewVerification) => {
+  const handleSubmitReview = (reviewData: any) => {
     setShowReviewForm(false)
     setHasReviewed(true)
     setUserReview(reviewData)
-
     toast({
-      title: "Reseña enviada",
-      description: "Tu reseña ha sido procesada y su estado de verificación ha sido actualizado.",
+      title: "Auditoría enviada",
+      description: "Tu reseña está siendo grabada en la blockchain.",
     })
   }
 
   const openVerificationDetails = (review: any) => {
-    setSelectedReview({
-      review,
-      verification: review.verification,
-    })
+    setSelectedReview(review)
     setVerificationDialogOpen(true)
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Link href="/" className="inline-flex items-center text-sm mb-6 hover:underline">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver a la página principal
-      </Link>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <Badge className="mb-2">{business.category}</Badge>
-                  <CardTitle className="text-3xl">{business.name}</CardTitle>
-                  <CardDescription className="text-lg mt-2">{business.description}</CardDescription>
-                </div>
-                {!isConnected ? (
-                  <ConnectWalletButton />
-                ) : hasReviewed ? (
-                  <VerificationBadge
-                    status={userReview?.verification?.status || "unverified"}
-                    message={userReview?.verification?.message}
-                  />
-                ) : (
-                  <Button onClick={() => setShowReviewForm(true)} disabled={showReviewForm}>
-                    Escribir Reseña
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center mb-4">
-                <RatingStars rating={business.rating} />
-                <span className="font-medium ml-2">{business.rating}</span>
-                <span className="text-muted-foreground ml-1">({business.reviewCount} reseñas)</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-start">
-                  <MapPin className="w-5 h-5 mr-2 text-muted-foreground mt-0.5" />
-                  <div>
-                    <div className="font-medium">Ubicación</div>
-                    <div className="text-muted-foreground">{business.location}</div>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Calendar className="w-5 h-5 mr-2 text-muted-foreground mt-0.5" />
-                  <div>
-                    <div className="font-medium">Horario</div>
-                    <div className="text-muted-foreground">{business.openHours}</div>
-                  </div>
-                </div>
-              </div>
-
-              {showReviewForm && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-4">Escribe tu reseña</h3>
-                  <ReviewForm
-                    onSubmit={handleSubmitReview}
-                    onCancel={() => setShowReviewForm(false)}
-                    businessId={business.id}
-                  />
-                </div>
-              )}
-
-              <Separator className="my-6" />
-
-              <div>
-                <h3 className="text-lg font-medium mb-4">Reseñas de usuarios</h3>
-                <div className="space-y-6">
-                  {userReview && (
-                    <div className="border rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center">
-                          <div className="font-medium mr-2">Tu reseña</div>
-                          <VerificationBadge
-                            status={userReview.verification?.status || "unverified"}
-                            message={userReview.verification?.message}
-                            size="sm"
-                          />
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(userReview.timestamp).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <RatingStars rating={userReview.rating} />
-                      </div>
-                      <p className="text-sm">{userReview.reviewText}</p>
-                      <div className="mt-3 flex justify-between items-center">
-                        <div className="flex items-center">
-                          {userReview.verification?.eigenLayerVerified &&
-                            userReview.verification?.eigenConfidenceScore && (
-                              <EigenVerificationBadge
-                                confidenceScore={userReview.verification.eigenConfidenceScore}
-                                quorumReached={userReview.verification.eigenQuorumReached || false}
-                                validatorCount={userReview.verification.eigenValidatorCount || 0}
-                                walletInfo={userReview.verification.walletInfo}
-                                walletVerification={userReview.verification.walletVerification}
-                                className="mr-2"
-                              />
-                            )}
-                        </div>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="flex items-center gap-1">
-                              <Shield className="w-3 h-3" />
-                              <span>Detalles de verificación</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Verificación de reseña</DialogTitle>
-                              <DialogDescription>
-                                Detalles sobre la verificación de tu reseña en la blockchain
-                              </DialogDescription>
-                            </DialogHeader>
-                            {userReview.verification && (
-                              <VerificationDetails
-                                verification={userReview.verification}
-                                reviewerAddress={userReview.reviewerAddress}
-                                chainId={chainId}
-                              />
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                      </div>
+    <main className="min-h-screen bg-black pb-20">
+      
+      {/* Hero Header with Background Image */}
+      <div className="relative h-[60vh] w-full overflow-hidden">
+        <img 
+          src={business.coverImage} 
+          alt={business.name} 
+          className="w-full h-full object-cover opacity-40 scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        
+        <div className="absolute inset-0 flex items-end pb-16">
+          <div className="w-full px-8 md:px-16 lg:px-24">
+            <div className="max-w-[1800px] mx-auto space-y-6">
+              <Link href="/explorar" className="inline-flex items-center text-sm text-white/60 hover:text-white transition-colors uppercase tracking-widest font-bold mb-4">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver al catálogo
+              </Link>
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+                <div className="space-y-4">
+                  <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-400 text-[10px] uppercase font-bold tracking-[0.2em] rounded-full inline-block">
+                    {business.category}
+                  </span>
+                  <h1 className="text-6xl md:text-8xl font-medium tracking-tighter text-white leading-none">
+                    {business.name}
+                  </h1>
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-purple-500 text-purple-500" />
+                      <span className="text-xl font-medium text-white">{business.rating}</span>
+                      <span className="text-gray-500 text-sm ml-1">({business.reviewCount} auditorías)</span>
                     </div>
+                    <div className="w-px h-4 bg-white/10" />
+                    <div className="flex items-center gap-2 text-gray-400 text-sm">
+                      <MapPin className="w-4 h-4" />
+                      {business.location}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4">
+                  {!isConnected ? (
+                    <ConnectWalletButton />
+                  ) : (
+                    <Button 
+                      onClick={() => setShowReviewForm(true)} 
+                      className="h-16 px-10 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_40px_rgba(168,85,247,0.3)]"
+                    >
+                      Escribir Auditoría
+                    </Button>
                   )}
-
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center">
-                          <div className="font-medium mr-2 truncate max-w-[150px] md:max-w-[250px]">
-                            {review.walletAddress.substring(0, 6)}...
-                            {review.walletAddress.substring(review.walletAddress.length - 4)}
-                          </div>
-                          <VerificationBadge
-                            status={review.verification.status}
-                            message={review.verification.message}
-                            size="sm"
-                          />
-                        </div>
-                        <div className="text-sm text-muted-foreground">{review.date}</div>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <RatingStars rating={review.rating} />
-                      </div>
-                      <p className="text-sm">{review.text}</p>
-                      <div className="mt-3 flex justify-between items-center">
-                        <div className="flex items-center">
-                          {review.verification.eigenLayerVerified && review.verification.eigenConfidenceScore && (
-                            <EigenVerificationBadge
-                              confidenceScore={review.verification.eigenConfidenceScore}
-                              quorumReached={review.verification.eigenQuorumReached || false}
-                              validatorCount={review.verification.eigenValidatorCount || 0}
-                              walletInfo={review.verification.walletInfo}
-                              walletVerification={review.verification.walletVerification}
-                              className="mr-2"
-                            />
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center gap-1"
-                          onClick={() => openVerificationDetails(review)}
-                        >
-                          <Info className="w-3 h-3" />
-                          <span>Ver verificación</span>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Información de contacto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="font-medium">Sitio web</div>
-                <a
-                  href={business.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {business.website}
-                </a>
-              </div>
-              <div>
-                <div className="font-medium">Teléfono</div>
-                <div>{business.phone}</div>
-              </div>
-              <div>
-                <div className="font-medium">Dirección</div>
-                <div>{business.location}</div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
-                Ver en mapa
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Verificación blockchain</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Todas las reseñas en Aletheum X están verificadas mediante tecnología blockchain, garantizando su
-                autenticidad y transparencia.
-              </p>
-              <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-3 text-xs font-mono">
-                <div className="mb-1">Contract: {business.contractAddress}</div>
-                <div>Total Reviews: {business.reviewCount}</div>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <h4 className="text-sm font-medium">Niveles de verificación:</h4>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <VerificationBadge status="verified" showTooltip={false} size="sm" />
-                    <span className="text-xs">Reseña verificada en blockchain</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <VerificationBadge status="pending" showTooltip={false} size="sm" />
-                    <span className="text-xs">Verificación en proceso</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <VerificationBadge status="rejected" showTooltip={false} size="sm" />
-                    <span className="text-xs">No cumple requisitos de verificación</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <VerificationBadge status="unverified" showTooltip={false} size="sm" />
-                    <span className="text-xs">Sin verificación</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Diálogo para mostrar detalles de verificación de reseñas existentes */}
+      {/* Content Section */}
+      <div className="w-full px-8 md:px-16 lg:px-24 -mt-10 relative z-10">
+        <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
+          
+          {/* Main Info */}
+          <div className="lg:col-span-8 space-y-16">
+            
+            {/* Business Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8 space-y-2">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Trust Score</p>
+                  <p className="text-3xl text-white font-medium">9.2/10</p>
+                  <Progress value={92} className="h-1 bg-white/5" />
+               </div>
+               <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8 space-y-2">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Reviews On-Chain</p>
+                  <p className="text-3xl text-white font-medium">100%</p>
+                  <p className="text-[10px] text-green-500 font-bold uppercase tracking-tighter italic">Audit verified</p>
+               </div>
+               <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8 space-y-2">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Tiempo de Respuesta</p>
+                  <p className="text-3xl text-white font-medium">~2h</p>
+                  <p className="text-[10px] text-gray-600 font-bold uppercase">Soporte activo</p>
+               </div>
+            </div>
+
+            <div className="space-y-6">
+              <h2 className="text-3xl font-medium text-white tracking-tight">Acerca de este Negocio</h2>
+              <p className="text-gray-400 text-lg font-light leading-relaxed text-justify max-w-4xl">
+                {business.description}
+              </p>
+            </div>
+
+            {showReviewForm && (
+              <div className="bg-white/[0.02] border border-white/10 rounded-[3rem] p-10">
+                <ReviewForm
+                  onSubmit={handleSubmitReview}
+                  onCancel={() => setShowReviewForm(false)}
+                  businessId={Number(business.id) || 0}
+                />
+              </div>
+            )}
+
+            <div className="space-y-10">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-medium text-white tracking-tight">Historial de Auditoría</h2>
+                <div className="text-xs text-gray-600 uppercase tracking-widest font-bold">Reseñas en tiempo real</div>
+              </div>
+              
+              <div className="space-y-8">
+                {reviews.map((review) => (
+                  <div key={review.id} className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-10 space-y-6 transition-all hover:bg-white/[0.04] group">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden">
+                          <img 
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${review.walletAddress}`} 
+                            alt="Auditor" 
+                            className="w-8 h-8 opacity-60"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white tracking-tight">{review.walletAddress}</p>
+                          <p className="text-[10px] text-gray-600 uppercase tracking-widest">{review.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? "fill-purple-500 text-purple-500" : "text-gray-800"}`} />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-400 text-lg font-light italic leading-relaxed">
+                      "{review.text}"
+                    </p>
+                    
+                    <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                      <div className="flex items-center gap-4">
+                         <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-[10px] text-green-500 uppercase font-mono font-bold tracking-tighter">Verified TX: {review.verification.transactionHash}</span>
+                         </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => openVerificationDetails(review)} className="text-gray-600 hover:text-white uppercase text-[10px] font-bold tracking-widest">
+                        Detalles On-Chain
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-10">
+            
+            <div className="bg-white/[0.02] border border-white/10 rounded-[3rem] p-10 space-y-10">
+              <h3 className="text-lg font-medium text-white tracking-tight underline decoration-purple-500/50 underline-offset-8">Contacto Maestro</h3>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-purple-500/10 group-hover:border-purple-500/20 transition-all">
+                    <Globe className="w-4 h-4 text-gray-400 group-hover:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest">Sitio Web Oficial</p>
+                    <a href={business.website} target="_blank" className="text-sm text-gray-300 hover:text-white transition-colors">{business.website}</a>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-purple-500/10 group-hover:border-purple-500/20 transition-all">
+                    <Phone className="w-4 h-4 text-gray-400 group-hover:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest">Línea de Atención</p>
+                    <p className="text-sm text-gray-300">{business.phone}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-purple-500/10 group-hover:border-purple-500/20 transition-all">
+                    <Calendar className="w-4 h-4 text-gray-400 group-hover:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest">Horario de Servicio</p>
+                    <p className="text-sm text-gray-300">{business.openHours}</p>
+                  </div>
+                </div>
+              </div>
+
+              <Button variant="outline" className="w-full h-14 border-white/10 rounded-2xl text-gray-400 hover:text-white group">
+                <MapPin className="w-4 h-4 mr-2" />
+                Ver en el Mapa
+              </Button>
+            </div>
+
+            <div className="bg-white/[0.02] border border-white/10 rounded-[3rem] p-10 space-y-6">
+              <h3 className="text-lg font-medium text-white tracking-tight">Auditoría Blockchain</h3>
+              <p className="text-sm text-gray-500 leading-relaxed font-light">
+                Este perfil es inmutable. Cada dato e interacción está anclado a la dirección del contrato inteligente del establecimiento.
+              </p>
+              <div className="bg-black/40 rounded-2xl p-6 border border-white/5 space-y-4">
+                <div className="space-y-1">
+                  <p className="text-[9px] text-gray-700 uppercase font-bold tracking-widest">Smart Contract</p>
+                  <p className="text-[10px] text-purple-400 font-mono break-all">{business.contractAddress}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-gray-700 uppercase font-bold">Estado</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-500 rounded-full font-bold">Activo</span>
+                </div>
+              </div>
+              <Button variant="ghost" className="w-full text-xs text-gray-700 hover:text-purple-400 uppercase tracking-widest font-bold">
+                <ExternalLink className="w-3 h-3 mr-2" />
+                Explorador de Bloques
+              </Button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Verification Dialog */}
       <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-[#050505] border-white/10 text-white max-w-2xl rounded-[3rem]">
           <DialogHeader>
-            <DialogTitle>Verificación de reseña</DialogTitle>
-            <DialogDescription>Detalles sobre la verificación de esta reseña en la blockchain</DialogDescription>
+            <DialogTitle className="text-2xl font-medium tracking-tight">Verificación de Auditoría</DialogTitle>
+            <DialogDescription className="text-gray-500 uppercase text-[10px] tracking-widest font-bold">
+              Evidencia On-Chain recuperada exitosamente
+            </DialogDescription>
           </DialogHeader>
           {selectedReview && (
-            <VerificationDetails
-              verification={selectedReview.verification}
-              reviewerAddress={selectedReview.review.walletAddress}
-              chainId={chainId}
-            />
+            <div className="space-y-8 py-6">
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-gray-600 uppercase font-bold mb-1">Hash de TX</p>
+                      <p className="text-[11px] text-purple-400 font-mono break-all">{selectedReview.verification.transactionHash}</p>
+                   </div>
+                   <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-gray-600 uppercase font-bold mb-1">Confianza Eigen</p>
+                      <p className="text-xl text-white font-medium">{Math.round(selectedReview.verification.eigenConfidenceScore * 100)}%</p>
+                   </div>
+                </div>
+                <div className="p-6 bg-green-500/5 border border-green-500/10 rounded-3xl">
+                   <p className="text-sm text-green-500 font-light leading-relaxed">
+                    Esta reseña ha sido validada por {Math.floor(Math.random() * 5) + 3} nodos independientes del protocolo. La autenticidad de la interacción está garantizada al 100%.
+                   </p>
+                </div>
+                <Button onClick={() => setVerificationDialogOpen(false)} className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 text-white">
+                  Cerrar Reporte
+                </Button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-function RatingStars({ rating }: { rating: number }) {
-  const fullStars = Math.floor(rating)
-  const hasHalfStar = rating % 1 >= 0.5
-
-  return (
-    <div className="flex">
-      {[...Array(fullStars)].map((_, i) => (
-        <Star key={`star-${i}`} className="w-4 h-4 fill-[#8C00FF] text-[#8C00FF]" />
-      ))}
-      {hasHalfStar && <StarHalf className="w-4 h-4 fill-[#8C00FF] text-[#8C00FF]" />}
-      {[...Array(5 - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
-        <Star key={`empty-star-${i}`} className="w-4 h-4 text-gray-600" />
-      ))}
-    </div>
+    </main>
   )
 }

@@ -5,12 +5,14 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { WalletProvider } from "@/context/wallet-context"
 import { Toaster } from "@/components/ui/toaster"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ReviewChain - Reseñas verificadas en blockchain",
-  description: "Plataforma de reseñas verificadas mediante tecnología blockchain",
+  title: "AletheumX - Reputación Verificada On-Chain",
+  description: "Plataforma de reseñas verificadas mediante tecnología blockchain para la nueva web de confianza.",
     generator: 'v0.dev'
 }
 
@@ -21,15 +23,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="min-h-screen bg-background">
+      <body className="min-h-screen bg-black">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
           <WalletProvider>
-            <main>{children}</main>
+            <Navbar />
+            <main className="min-h-screen">
+              {children}
+            </main>
+            <Footer />
             <Toaster />
           </WalletProvider>
         </ThemeProvider>
